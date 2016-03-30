@@ -78,7 +78,12 @@ function fetchRepos(who) {
     });
   });
 
-  repoPromise.then(extractPackages);
+  return repoPromise
+    .then(extractPackages)
+    .then(v => {
+      console.log(JSON.stringify(v, null, '  '));
+      return v;
+    });
 }
 
 function followPages(resolve, reject, repos, res) {
@@ -95,15 +100,12 @@ function followPages(resolve, reject, repos, res) {
 }
 
 function extractPackages(repos) {
-  repos = [repos[0], repos[1], repos[2]];
-  Promise.map(repos, r => {
+  return Promise.map(repos, r => {
     return Promise.props({
       repoName: r.full_name,
       dependencies: fetchDeps(r).then(fetchDetailsFromDeps)
     });
-  })
-  .then(v => JSON.stringify(v, null, '  '))
-  .then(console.log);
+  });
 }
 
 function fetchDeps(repo) {
@@ -113,10 +115,24 @@ function fetchDeps(repo) {
       repo: repo.name,
       path: 'package.json',
     }, (err, res) => {
-      let packageStr = new Buffer(res.content, 'base64').toString();
-      let thePackage = JSON.parse(packageStr);
-      let deps = _.keys(thePackage.dependencies);
-      resolve(deps);
+      if (err) {
+        if (err.code === 404) {
+          resolve([]);
+        } else {
+          reject(err);
+        }
+      } else {
+        let packageStr = new Buffer(res.content, 'base64').toString();
+        let thePackage = JSON.parse(packageStr);
+        console.log(repo.full_name);
+        console.log(thePackage.dependencies);
+        let deps = _(thePackage.dependencies)
+          .keys()
+          .map(d => d.toLowerCase())
+          .value();
+          console.log(deps);
+        resolve(deps);
+      }
     });
   });
 }
