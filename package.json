@@ -1,0 +1,25 @@
+{
+  "name": "@socialtables/license-to-thrill",
+  "version": "0.0.2",
+  "description": "License enumerator.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "bin": {
+    "license-to-thrill": "./index.js"
+  },
+  "author": "jim.mcgee@socialtables.com",
+  "license": "ISC",
+  "dependencies": {
+    "bluebird": "^3.3.4",
+    "colors": "^1.1.2",
+    "commander": "^2.9.0",
+    "envs": "^0.1.6",
+    "github4": "^0.5.4",
+    "licenses": "0.0.20",
+    "lodash": "^4.6.1",
+    "package-info": "^2.2.3",
+    "prompt": "^1.0.0"
+  }
+}
