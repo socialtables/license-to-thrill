@@ -16,12 +16,12 @@ program
   .version('0.0.2');
 
 program
-  .usage('-u <github username> -p <github token>')
+  .usage('-u <github username> -p <github token> -w [github target user]')
   .option('-u, --username <u>', 'Your GitHub username or email')
   .option('-t, --token <t>', 'A GitHub personal access token')
   .option('-w, --who <w>', 'Github username of the user to enumerate')
   .on('--help', () => {
-    console.log("  See https://github.com/settings/tokens to set up a token.");
+    console.log("  See https://github.com/settings/tokens to create a token.");
     console.log("  Leave all permissions unchecked.");
   })
   .parse(process.argv);
