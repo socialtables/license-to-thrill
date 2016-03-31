@@ -25,3 +25,7 @@ See https://github.com/settings/tokens to create a token.  Check only the '**rep
 - currently, l-t-t only looks in the root directory of a user's repos for a `package.json`. this can obviously be improved...
 - including other language's dependency lists? scary.
 - devDependencies?
+
+# Licensing
+
+This project is licensed under the terms of the Apache 2 license.
