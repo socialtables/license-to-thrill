@@ -124,13 +124,10 @@ function fetchDeps(repo) {
       } else {
         let packageStr = new Buffer(res.content, 'base64').toString();
         let thePackage = JSON.parse(packageStr);
-        console.log(repo.full_name);
-        console.log(thePackage.dependencies);
         let deps = _(thePackage.dependencies)
           .keys()
           .map(d => d.toLowerCase())
           .value();
-          console.log(deps);
         resolve(deps);
       }
     });
