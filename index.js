@@ -98,6 +98,7 @@ function fetchRepos(who) {
           .reject(_.isEmpty)
           .flatten()
           .uniqBy('name')
+          .sortBy('name')
           .value();
       }
       console.log(JSON.stringify(allData, null, '  '));
