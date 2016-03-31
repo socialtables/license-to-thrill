@@ -20,6 +20,7 @@ program
   .option('-u, --username <u>', 'Your GitHub username or email')
   .option('-t, --token <t>', 'A GitHub personal access token')
   .option('-w, --who <w>', 'Github username of the user to enumerate')
+  .option('--combined-unique', 'Combine and de-dupe all repos dependencies')
   .on('--help', () => {
     console.log("  See https://github.com/settings/tokens to create a token.");
     console.log("  Leave all permissions unchecked.");
@@ -70,19 +71,37 @@ function authenticate(username, token) {
 }
 
 function fetchRepos(who) {
-  let repoPromise = new Promise((resolve, reject) => {
+  let userPromise = new Promise((resolve, reject) => {
     github.repos.getForUser(
-      {user: who},
+      {user: who, per_page: 100},
       (err, res) => {
         followPages(resolve, reject, [], res);
     });
   });
 
-  return repoPromise
-    .then(extractPackages)
-    .then(v => {
-      console.log(JSON.stringify(v, null, '  '));
-      return v;
+  let orgPromise = new Promise((resolve, reject) => {
+    github.repos.getForOrg(
+      {org: who, per_page: 100},
+      (err, res) => {
+        followPages(resolve, reject, [], res);
+    });
+  });
+
+  return Promise.all([userPromise, orgPromise])
+    .then(userAndOrgRepos => _.flatten(userAndOrgRepos))
+    .then(extractDepsFromPackages)
+    .then(dedupeAndFetchDeps)
+    .then(allData => {
+      if (program.combinedUnique) {
+        allData = _(allData)
+          .map('dependencies')
+          .reject(_.isEmpty)
+          .flatten()
+          .uniqBy('name')
+          .value();
+      }
+      console.log(JSON.stringify(allData, null, '  '));
+      return allData;
     });
 }
 
@@ -99,16 +118,16 @@ function followPages(resolve, reject, repos, res) {
   }
 }
 
-function extractPackages(repos) {
+function extractDepsFromPackages(repos) {
   return Promise.map(repos, r => {
     return Promise.props({
       repoName: r.full_name,
-      dependencies: fetchDeps(r).then(fetchDetailsFromDeps)
+      dependencies: fetchDepsFromRepo(r)
     });
   });
 }
 
-function fetchDeps(repo) {
+function fetchDepsFromRepo(repo) {
   return new Promise((resolve, reject) => {
     github.repos.getContent({
       user: repo.owner.login,
@@ -116,9 +135,11 @@ function fetchDeps(repo) {
       path: 'package.json',
     }, (err, res) => {
       if (err) {
-        if (err.code === 404) {
+        if (err.code === 404 || err.code === 500) { //TODO: 404 only?
           resolve([]);
         } else {
+          console.error(repo.full_name);
+          console.error(err);
           reject(err);
         }
       } else {
@@ -134,13 +155,27 @@ function fetchDeps(repo) {
   });
 }
 
-function fetchDetailsFromDeps(deps) {
-  return Promise.map(deps, dep => {
-    return Promise.props({
-      name: dep,
-      licenses: fetchLicense(dep),
-      description: fetchDescription(dep)
-    });
+function dedupeAndFetchDeps(repos) {
+  let uniqDeps = _(repos)
+    .flatMap('dependencies')
+    .keyBy()
+    .mapValues(fetchDetailsFromDep)
+    .value();
+
+  return Promise.map(repos, r =>
+    Promise.props(
+      _.extend(r, {
+        dependencies: Promise.map(r.dependencies, d => uniqDeps[d])
+      })
+    )
+  );
+}
+
+function fetchDetailsFromDep(dep) {
+  return Promise.props({
+    name: dep,
+    licenses: fetchLicense(dep),
+    description: fetchDescription(dep)
   });
 }
 
@@ -153,7 +188,7 @@ function fetchLicense(dep) {
         resolve(license);
       }
     });
-  });
+  }).catch(console.error);
 }
 
 function fetchDescription(dep) {
@@ -165,7 +200,7 @@ function fetchDescription(dep) {
         resolve(info.description);
       }
     })
-  });
+  }).catch(console.error);
 }
 
 module.exports = {
