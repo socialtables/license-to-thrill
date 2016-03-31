@@ -135,11 +135,9 @@ function fetchDepsFromRepo(repo) {
       path: 'package.json',
     }, (err, res) => {
       if (err) {
-        if (err.code === 404 || err.code === 500) { //TODO: 404 only?
+        if (err.code === 404) {
           resolve([]);
         } else {
-          console.error(repo.full_name);
-          console.error(err);
           reject(err);
         }
       } else {
@@ -158,17 +156,18 @@ function fetchDepsFromRepo(repo) {
 function dedupeAndFetchDeps(repos) {
   let uniqDeps = _(repos)
     .flatMap('dependencies')
-    .keyBy()
-    .mapValues(fetchDetailsFromDep)
+    .uniq()
     .value();
 
-  return Promise.map(repos, r =>
-    Promise.props(
-      _.extend(r, {
-        dependencies: Promise.map(r.dependencies, d => uniqDeps[d])
-      })
-    )
-  );
+  return Promise.map(uniqDeps, fetchDetailsFromDep, {concurrency: 3})
+    .then(assignDepsToRepos);
+
+  function assignDepsToRepos(detailedDeps) {
+    let depsMap = _.keyBy(detailedDeps, 'name');
+    return repos.map(r => _.extend(r, {
+      dependencies: r.dependencies.map(d => depsMap[d])
+    }));
+  }
 }
 
 function fetchDetailsFromDep(dep) {
