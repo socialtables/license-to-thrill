@@ -21,4 +21,4 @@ See https://github.com/settings/tokens to create a token. Leave all permissions 
 # TODO
 
 - currently, l-t-t only looks in the root directory of a user's repos for a `package.json`. this can obviously be improved...
-- including other dependency lists? scary.
+- including other language's dependency lists? scary.
