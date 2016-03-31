@@ -10,7 +10,7 @@
     "license-to-thrill": "./index.js"
   },
   "author": "jim.mcgee@socialtables.com",
-  "license": "ISC",
+  "license": "Apache-2.0",
   "dependencies": {
     "bluebird": "^3.3.4",
     "colors": "^1.1.2",
