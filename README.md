@@ -2,7 +2,7 @@
 
 ![goldeneye?](https://media.giphy.com/media/iu63aOVVFspQQ/giphy.gif)
 
-A command line application to enumerate and output all the licenses of all the packages of any GitHub user.
+A command line application to enumerate and output the licenses of all the NPM packages for all the repos of any GitHub user.
 (Lawyers require this information to perform their arcane and eldritch incantations.)
 
 # Installation
@@ -17,3 +17,8 @@ See https://github.com/settings/tokens to create a token. Leave all permissions 
 
 - `$ license-to-thrill -u <github username> -p <github token> -w [github target user]`
 - `$ license-to-thrill [...] > licenseData.json`
+
+# TODO
+
+- currently, l-t-t only looks in the root directory of a user's repos for a `package.json`. this can obviously be improved...
+- including other dependency lists? scary.
