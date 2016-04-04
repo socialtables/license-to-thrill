@@ -172,10 +172,13 @@ function dedupeAndFetchDeps(repos) {
 }
 
 function fetchDetailsFromDep(dep) {
+  let infoPromise = fetchInfo(dep);
   return Promise.props({
     name: dep,
     licenses: fetchLicense(dep),
-    description: fetchDescription(dep)
+    description: infoPromise.then(info => _.get(info, 'description')),
+    homepage: infoPromise.then(info => _.get(info, 'homepage')),
+    author: infoPromise.then(info => _.get(info, 'author'))
   });
 }
 
@@ -191,13 +194,13 @@ function fetchLicense(dep) {
   }).catch(console.error);
 }
 
-function fetchDescription(dep) {
+function fetchInfo(dep) {
   return new Promise((resolve, reject) => {
     packageInfo(dep, (err, info) => {
       if (err) {
         reject(err);
       } else {
-        resolve(info.description);
+        resolve(info);
       }
     })
   }).catch(console.error);
